@@ -1,28 +1,28 @@
 package service
 
 import (
-	"github.com/pancudaniel7/pack-sizes-service/api/pack"
+	"github.com/pancudaniel7/pack-sizes-service/api/dto"
 	"github.com/pancudaniel7/pack-sizes-service/internal/dao"
 	"github.com/pancudaniel7/pack-sizes-service/internal/model"
 	"sort"
 )
 
-type PackService struct {
+type DefaultPackService struct {
 	dao dao.PackDao
 }
 
-func NewPackService(dao dao.PackDao) *PackService {
-	return &PackService{
+func NewDefaultPackService(dao dao.PackDao) *DefaultPackService {
+	return &DefaultPackService{
 		dao: dao,
 	}
 }
 
-func (s *PackService) SetPackSize(packDTO pack.DTO) error {
+func (s *DefaultPackService) SetPackSize(packDTO dto.PackDTO) error {
 	packObj := model.Pack{Sizes: packDTO.Sizes}
 	return s.dao.AddPackSize(packObj)
 }
 
-func (s *PackService) CalculatePacks(orderQty int) ([]pack.SizeQuantityDTO, error) {
+func (s *DefaultPackService) CalculatePacks(orderQty int) ([]dto.SizeQuantityPackDTO, error) {
 	packObj, err := s.dao.GetPackSize()
 	if err != nil {
 		return nil, err
@@ -32,16 +32,16 @@ func (s *PackService) CalculatePacks(orderQty int) ([]pack.SizeQuantityDTO, erro
 	return packs, nil
 }
 
-func calculatePacks(orderQty int, packSizes []int) []pack.SizeQuantityDTO {
+func calculatePacks(orderQty int, packSizes []int) []dto.SizeQuantityPackDTO {
 	sort.Sort(sort.Reverse(sort.IntSlice(packSizes)))
 
-	var packs []pack.SizeQuantityDTO
+	var packs []dto.SizeQuantityPackDTO
 	remaining := orderQty
 
 	for _, size := range packSizes {
 		if remaining >= size {
 			quantity := remaining / size
-			packs = append(packs, pack.SizeQuantityDTO{Size: size, Quantity: quantity})
+			packs = append(packs, dto.SizeQuantityPackDTO{Size: size, Quantity: quantity})
 			remaining %= size
 		}
 	}
@@ -49,7 +49,7 @@ func calculatePacks(orderQty int, packSizes []int) []pack.SizeQuantityDTO {
 	if remaining > 0 {
 		for _, size := range packSizes {
 			if size >= remaining {
-				packs = append(packs, pack.SizeQuantityDTO{Size: size, Quantity: 1})
+				packs = append(packs, dto.SizeQuantityPackDTO{Size: size, Quantity: 1})
 				break
 			}
 		}

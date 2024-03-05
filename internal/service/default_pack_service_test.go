@@ -2,7 +2,7 @@ package service
 
 import (
 	"errors"
-	"github.com/pancudaniel7/pack-sizes-service/api/pack"
+	"github.com/pancudaniel7/pack-sizes-service/api/dto"
 	"github.com/pancudaniel7/pack-sizes-service/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -28,8 +28,8 @@ func (m *MockPackDao) GetPackSize() (model.Pack, error) {
 
 func TestSetPackSize(t *testing.T) {
 	mockDao := new(MockPackDao)
-	service := NewPackService(mockDao)
-	packDTO := pack.DTO{Sizes: []int{5, 10, 20}}
+	service := NewDefaultPackService(mockDao)
+	packDTO := dto.PackDTO{Sizes: []int{5, 10, 20}}
 
 	mockDao.On("AddPackSize", mock.Anything).Return(nil)
 
@@ -41,9 +41,9 @@ func TestSetPackSize(t *testing.T) {
 
 func TestCalculatePacks_Success(t *testing.T) {
 	mockDao := new(MockPackDao)
-	service := NewPackService(mockDao)
+	service := NewDefaultPackService(mockDao)
 	orderQty := 50
-	expectedPacks := []pack.SizeQuantityDTO{
+	expectedPacks := []dto.SizeQuantityPackDTO{
 		{Size: 20, Quantity: 2},
 		{Size: 10, Quantity: 1},
 	}
@@ -59,9 +59,9 @@ func TestCalculatePacks_Success(t *testing.T) {
 
 func TestCalculatePacks_DaoError(t *testing.T) {
 	mockDao := new(MockPackDao)
-	service := NewPackService(mockDao)
+	service := NewDefaultPackService(mockDao)
 
-	mockDao.On("GetPackSize").Return(model.Pack{}, errors.New("fail to access pack sizes"))
+	mockDao.On("GetPackSize").Return(model.Pack{}, errors.New("fail to access dto sizes"))
 
 	_, err := service.CalculatePacks(50)
 

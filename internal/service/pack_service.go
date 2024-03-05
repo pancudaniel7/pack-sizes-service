@@ -1,10 +1,10 @@
 package service
 
 import (
-	"github.com/pancudaniel7/pack-sizes-service/api/pack"
+	"github.com/pancudaniel7/pack-sizes-service/api/dto"
 )
 
-type PackServiceInterface interface {
-	SetPackSize(packDTO pack.DTO) error
-	calculatePack()
+type PackService interface {
+	SetPackSize(packDTO dto.PackDTO) error
+	CalculatePacks(orderQty int) ([]dto.SizeQuantityPackDTO, error)
 }

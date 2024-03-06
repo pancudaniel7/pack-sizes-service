@@ -43,7 +43,7 @@ func (c *DefaultPackController) SetPackSize(ctx *gin.Context) {
 func (c *DefaultPackController) CalculatePacks(ctx *gin.Context) {
 	orderQtyStr := ctx.Query("orderQty")
 	orderQty, err := strconv.Atoi(orderQtyStr)
-	if err != nil {
+	if err != nil || orderQty <= 0 {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order quantity"})
 		return
 	}

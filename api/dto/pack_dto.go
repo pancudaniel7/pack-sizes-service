@@ -1,10 +1,10 @@
 package dto
 
 type PackSizesDTO struct {
-	Sizes []int
+	Sizes []int `json:"sizes"`
 }
 
 type PackQuantitiesDTO struct {
-	Size     int
-	Quantity int
+	Size     int `json:"size"`
+	Quantity int `json:"quantity"`
 }

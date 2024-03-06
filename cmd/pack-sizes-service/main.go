@@ -13,12 +13,9 @@ import (
 
 func main() {
 	initConfig()
-	router := initRouter()
 
-	inMemoryPackDao := dao.NewInMemoryPackDao(model.Pack{})
-	packService := service.NewDefaultPackService(inMemoryPackDao)
-	controller.NewDefaultPackController(packService, router)
-	controller.NewHealthController(router)
+	router := initRouter()
+	initComponents(router)
 
 	port := viper.GetString("app.port")
 	host := viper.GetString("app.localhost")
@@ -27,6 +24,13 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("Fatal error starting server: %w \n", err))
 	}
+}
+
+func initComponents(router *gin.Engine) {
+	inMemoryPackDao := dao.NewInMemoryPackDao(model.Pack{})
+	packService := service.NewDefaultPackService(inMemoryPackDao)
+	controller.NewDefaultPackController(packService, router)
+	controller.NewHealthController(router)
 }
 
 func initRouter() *gin.Engine {

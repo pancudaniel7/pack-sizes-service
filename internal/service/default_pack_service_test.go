@@ -29,7 +29,7 @@ func (m *MockPackDao) GetPackSize() (model.Pack, error) {
 func TestSetPackSize(t *testing.T) {
 	mockDao := new(MockPackDao)
 	service := NewDefaultPackService(mockDao)
-	packDTO := dto.PackDTO{Sizes: []int{5, 10, 20}}
+	packDTO := dto.PackSizesDTO{Sizes: []int{5, 10, 20}}
 
 	mockDao.On("AddPackSize", mock.Anything).Return(nil)
 
@@ -42,13 +42,14 @@ func TestSetPackSize(t *testing.T) {
 func TestCalculatePacks_Success(t *testing.T) {
 	mockDao := new(MockPackDao)
 	service := NewDefaultPackService(mockDao)
-	orderQty := 50
-	expectedPacks := []dto.SizeQuantityPackDTO{
-		{Size: 20, Quantity: 2},
-		{Size: 10, Quantity: 1},
+	orderQty := 12001
+	expectedPacks := []dto.PackQuantitiesDTO{
+		{Size: 5000, Quantity: 2},
+		{Size: 2000, Quantity: 1},
+		{Size: 250, Quantity: 1},
 	}
 
-	mockDao.On("GetPackSize").Return(model.Pack{Sizes: []int{5, 10, 20}}, nil)
+	mockDao.On("GetPackSize").Return(model.Pack{Sizes: []int{250, 500, 1000, 2000, 5000}}, nil)
 
 	packs, err := service.CalculatePacks(orderQty)
 

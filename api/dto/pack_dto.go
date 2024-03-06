@@ -1,10 +1,10 @@
 package dto
 
-type PackDTO struct {
+type PackSizesDTO struct {
 	Sizes []int
 }
 
-type SizeQuantityPackDTO struct {
+type PackQuantitiesDTO struct {
 	Size     int
 	Quantity int
 }

@@ -5,6 +5,6 @@ import (
 )
 
 type PackService interface {
-	SetPackSize(packDTO dto.PackDTO) error
-	CalculatePacks(orderQty int) ([]dto.SizeQuantityPackDTO, error)
+	SetPackSize(packDTO dto.PackSizesDTO) error
+	CalculatePacks(orderQty int) ([]dto.PackQuantitiesDTO, error)
 }

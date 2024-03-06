@@ -26,7 +26,7 @@ func (c *DefaultPackController) registerRoutes(router *gin.Engine, controller *D
 }
 
 func (c *DefaultPackController) SetPackSize(ctx *gin.Context) {
-	var packDTO dto.PackDTO
+	var packDTO dto.PackSizesDTO
 	if err := ctx.ShouldBindJSON(&packDTO); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

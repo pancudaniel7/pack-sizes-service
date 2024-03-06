@@ -1,3 +1,5 @@
+// Package service provides business logic for handling pack sizes
+// and calculating quantities for orders based on given pack sizes.
 package service
 
 import (
@@ -7,21 +9,28 @@ import (
 	"sort"
 )
 
+// DefaultPackService provides methods for managing pack sizes
+// and calculating pack quantities for orders.
 type DefaultPackService struct {
 	dao dao.PackDao
 }
 
+// NewDefaultPackService creates a new instance of DefaultPackService
+// with the given dao.PackDao.
 func NewDefaultPackService(dao dao.PackDao) *DefaultPackService {
 	return &DefaultPackService{
 		dao: dao,
 	}
 }
 
+// SetPackSize persists a new set of pack sizes.
 func (s *DefaultPackService) SetPackSize(packDTO dto.PackSizesDTO) error {
 	packObj := model.Pack{Sizes: packDTO.Sizes}
 	return s.dao.AddPackSize(packObj)
 }
 
+// CalculatePacks calculates the optimal quantities of packs needed
+// for the given order quantity using available pack sizes.
 func (s *DefaultPackService) CalculatePacks(orderQty int) ([]dto.PackQuantitiesDTO, error) {
 	packSizesObj, err := s.dao.GetPackSize()
 	if err != nil {
@@ -40,6 +49,9 @@ func (s *DefaultPackService) CalculatePacks(orderQty int) ([]dto.PackQuantitiesD
 	return sqpDTO, nil
 }
 
+// calculatePacks is a recursive function that determines the combination of pack sizes
+// that can be used to fulfill an order quantity. It takes into account the sizes of packs
+// available in descending order and calculates the number of packs required for each size.
 func calculatePacks(sizeQuantityPacks *[]dto.PackQuantitiesDTO, descOrderedPackSizes []int, orderQuantity int, cursor int) {
 
 	for _, packSize := range descOrderedPackSizes[cursor:] {
@@ -80,6 +92,8 @@ func changeSameQuantity(sizeQuantityPacks *[]dto.PackQuantitiesDTO, descOrderedP
 	}
 }
 
+// findPackSizeIndex returns the index of a specific pack size within the slice
+// of pack sizes ordered in descending order.
 func findPackSizeIndex(descOrderedPackSizes *[]int, packSize int) int {
 	for index, size := range *descOrderedPackSizes {
 		if size == packSize {
@@ -89,6 +103,8 @@ func findPackSizeIndex(descOrderedPackSizes *[]int, packSize int) int {
 	return -1
 }
 
+// findSameQuantityIndex searches for a pack size in the slice of pack sizes and quantities
+// and returns the index of the matching pack size if found.
 func findSameQuantityIndex(sizeQuantityPacks *[]dto.PackQuantitiesDTO, packSize int) int {
 	for index, sizeQuantity := range *sizeQuantityPacks {
 		if sizeQuantity.Size == packSize {

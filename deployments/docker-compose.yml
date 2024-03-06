@@ -1,0 +1,7 @@
+version: '3.8'
+services:
+  pack-sizes-service:
+    build:
+      context: ../
+    ports:
+      - "8080:8080"

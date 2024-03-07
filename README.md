@@ -12,9 +12,9 @@ To run the project locally:
 ```
 
 ### Running with Docker Compose
-Navigate to the `deployments/` directory and run:
+Navigate project directory and run:
 ```
-docker-compose -f docker-compose.yml up --build
+docker-compose -f deployments/docker-compose.yml up --build
 ```
 This command builds the service and starts it, making the UI accessible at `localhost:8080`.
 

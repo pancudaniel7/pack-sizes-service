@@ -8,6 +8,11 @@ go build -o pack-sizes-service cmd/pack-sizes-service/main.go
 ```
 To run the project locally:
 ```
+go run cmd/pack-sizes-service/main.go
+```
+
+Or if you want to run the executable created by the build you can run:
+```
 ./pack-sizes-service
 ```
 

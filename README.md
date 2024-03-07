@@ -4,7 +4,7 @@ The pack sizes algorithm optimally calculates the required quantities of differe
 ### Building and Running Locally
 To build the project, navigate to the project directory and run:
 ```
-go build -o pack-sizes-service .
+go build -o pack-sizes-service cmd/pack-sizes-service/main.go
 ```
 To run the project locally:
 ```

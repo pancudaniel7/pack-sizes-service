@@ -6,6 +6,7 @@ import (
 	"github.com/pancudaniel7/pack-sizes-service/api/dto"
 	"github.com/pancudaniel7/pack-sizes-service/internal/dao"
 	"github.com/pancudaniel7/pack-sizes-service/internal/model"
+	"math"
 	"sort"
 )
 
@@ -31,7 +32,7 @@ func (s *DefaultPackService) SetPackSize(packDTO dto.PackSizesDTO) error {
 
 // CalculatePacks calculates the optimal quantities of packs needed
 // for the given order quantity using available pack sizes.
-func (s *DefaultPackService) CalculatePacks(orderQty int) ([]dto.PackQuantitiesDTO, error) {
+func (s *DefaultPackService) CalculatePacks(orderQty int) (*[]dto.PackQuantitiesDTO, error) {
 	packSizesObj, err := s.dao.GetPackSize()
 	if err != nil {
 		return nil, err
@@ -43,73 +44,79 @@ func (s *DefaultPackService) CalculatePacks(orderQty int) ([]dto.PackQuantitiesD
 	}
 	sort.Sort(sort.Reverse(sort.IntSlice(packSizes)))
 
-	var sqpDTO []dto.PackQuantitiesDTO
-	calculatePacks(&sqpDTO, packSizes, orderQty, 0)
+	sqpDTOMap := calculatePacks(&packSizes, orderQty)
+	sqpDTOs := convertSQPMap(sqpDTOMap)
 
-	return sqpDTO, nil
+	return sqpDTOs, nil
 }
 
-// calculatePacks is a recursive function that determines the combination of pack sizes
-// that can be used to fulfill an order quantity. It takes into account the sizes of packs
-// available in descending order and calculates the number of packs required for each size.
-func calculatePacks(sizeQuantityPacks *[]dto.PackQuantitiesDTO, descOrderedPackSizes []int, orderQuantity int, cursor int) {
+func convertSQPMap(sqpDTOMap map[int]int) *[]dto.PackQuantitiesDTO {
+	packQuantities := make([]dto.PackQuantitiesDTO, 0, len(sqpDTOMap))
+	for quantity, size := range sqpDTOMap {
+		packQuantities = append(packQuantities, dto.PackQuantitiesDTO{
+			Size:     size,
+			Quantity: quantity,
+		})
+	}
+	return &packQuantities
+}
 
-	for _, packSize := range descOrderedPackSizes[cursor:] {
-		lastItem := descOrderedPackSizes[len(descOrderedPackSizes)-1]
-		if packSize == lastItem || orderQuantity > packSize {
-			div := orderQuantity / packSize
-			rem := orderQuantity % packSize
+func calculatePacks(orderPackSizes *[]int, orderQuantity int) map[int]int {
 
-			sameQuantityIndex := findSameQuantityIndex(sizeQuantityPacks, packSize)
-			if sameQuantityIndex != -1 {
-				changeSameQuantity(sizeQuantityPacks, &descOrderedPackSizes, sameQuantityIndex)
-				if div == 0 {
-					break
-				}
-			} else {
-				if div == 0 {
-					*sizeQuantityPacks = append(*sizeQuantityPacks, dto.PackQuantitiesDTO{Quantity: 1, Size: packSize})
-					break
-				}
-				*sizeQuantityPacks = append(*sizeQuantityPacks, dto.PackQuantitiesDTO{Quantity: div, Size: packSize})
+	seSlots := math.MaxInt32        // selected empty slots
+	snPacks := math.MaxInt32        // selected number of packs
+	spQuantity := make(map[int]int) // selected pack quantity
+
+	for _, packSize := range *orderPackSizes {
+
+		es, np, pq := recursiveCalculatePacks(orderPackSizes, orderQuantity, packSize, 0)
+		if es < seSlots {
+			snPacks = np
+			seSlots = es
+			spQuantity = pq
+		} else if es == seSlots && np < snPacks {
+			snPacks = np
+			seSlots = es
+			spQuantity = pq
+		}
+	}
+
+	return spQuantity
+}
+
+func recursiveCalculatePacks(orderPackSizes *[]int, remainingOrderQuantity int, selectedPack int, numberOfPacks int) (int, int, map[int]int) {
+	numberOfPacks++
+
+	seSlots := math.MaxInt32        // selected empty slots
+	snPacks := numberOfPacks        // selected number of packs
+	cPack := selectedPack           // current pack
+	spQuantity := make(map[int]int) // selected pack quantity
+
+	if remainingOrderQuantity <= selectedPack {
+		seSlots = selectedPack - remainingOrderQuantity
+	} else {
+		remainingOrderQuantity = remainingOrderQuantity - selectedPack
+
+		for _, packSize := range *orderPackSizes {
+			es, np, pq := recursiveCalculatePacks(orderPackSizes, remainingOrderQuantity, packSize, numberOfPacks)
+			if es < seSlots {
+				seSlots = es
+				snPacks = np
+				cPack = packSize
+				spQuantity = pq
+			} else if es == seSlots && np < snPacks {
+				snPacks = np
+				cPack = packSize
+				spQuantity = pq
 			}
-
-			if rem != 0 {
-				calculatePacks(sizeQuantityPacks, descOrderedPackSizes, rem, cursor+1)
-				break
-			}
 		}
 	}
-}
 
-func changeSameQuantity(sizeQuantityPacks *[]dto.PackQuantitiesDTO, descOrderedPackSizes *[]int, index int) {
-	if index != -1 {
-		samePackSize := (*sizeQuantityPacks)[index].Size
-		packSizeIndex := findPackSizeIndex(descOrderedPackSizes, samePackSize)
-
-		(*sizeQuantityPacks)[index].Size = (*descOrderedPackSizes)[packSizeIndex-1]
-		(*sizeQuantityPacks)[index].Quantity = (*sizeQuantityPacks)[index].Quantity + 1
+	if val, exists := spQuantity[cPack]; exists {
+		spQuantity[cPack] = val + 1
+	} else {
+		spQuantity[cPack] = 1
 	}
-}
 
-// findPackSizeIndex returns the index of a specific pack size within the slice
-// of pack sizes ordered in descending order.
-func findPackSizeIndex(descOrderedPackSizes *[]int, packSize int) int {
-	for index, size := range *descOrderedPackSizes {
-		if size == packSize {
-			return index
-		}
-	}
-	return -1
-}
-
-// findSameQuantityIndex searches for a pack size in the slice of pack sizes and quantities
-// and returns the index of the matching pack size if found.
-func findSameQuantityIndex(sizeQuantityPacks *[]dto.PackQuantitiesDTO, packSize int) int {
-	for index, sizeQuantity := range *sizeQuantityPacks {
-		if sizeQuantity.Size == packSize {
-			return index
-		}
-	}
-	return -1
+	return seSlots, snPacks, spQuantity
 }

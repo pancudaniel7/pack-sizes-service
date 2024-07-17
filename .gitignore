@@ -5,3 +5,4 @@ out/
 bin/
 *.iml
 
+pack-sizes-service

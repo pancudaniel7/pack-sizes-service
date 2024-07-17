@@ -6,9 +6,14 @@ To build the project, navigate to the project directory and run:
 ```
 go build -o pack-sizes-service cmd/pack-sizes-service/main.go
 ```
-To run the project locally:
+To run the app locally:
 ```
 go run cmd/pack-sizes-service/main.go
+```
+
+To run the app using remote debug port:
+```bash
+dlv debug cmd/pack-sizes-service/main.go --headless --listen=:2345 --api-version=2 --log
 ```
 
 Or if you want to run the executable created by the build you can run:

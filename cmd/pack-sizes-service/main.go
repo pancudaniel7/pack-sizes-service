@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/pancudaniel7/pack-sizes-service/api/controller"
 	"github.com/pancudaniel7/pack-sizes-service/internal/dao"
@@ -9,6 +10,7 @@ import (
 	"github.com/pancudaniel7/pack-sizes-service/internal/service"
 	"github.com/pancudaniel7/pack-sizes-service/web/handlers"
 	"github.com/spf13/viper"
+	"time"
 )
 
 func main() {
@@ -39,6 +41,17 @@ func initRouter() *gin.Engine {
 		c.Header("Content-Type", "application/json")
 		c.Next()
 	})
+
+	corsDomains := viper.GetStringSlice("app.cors")
+	config := cors.Config{
+		AllowOrigins:     corsDomains,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
+	router.Use(cors.New(config))
 
 	router.LoadHTMLGlob("web/templates/*.html")
 	router.GET("/", handlers.IndexHandler)
